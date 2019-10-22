@@ -1,15 +1,15 @@
 /* eslint-disable no-console */
 import http, { IncomingMessage, ServerResponse, IncomingHttpHeaders, RequestOptions, ClientRequest } from 'http';
-import urlUtil, { UrlWithStringQuery } from 'url';
+import urlUtil from 'url';
 import net from 'net';
 
 const listenPort = 3000;
 const server = http.createServer();
 
-const request = (req: IncomingMessage, res: ServerResponse) => {
+const request = (req: IncomingMessage, res: ServerResponse): void => {
   const { url, method } = req;
 
-  const { headers }: { headers: IncomingHttpHeaders } = req;
+  const {  }: { headers: IncomingHttpHeaders } = req;
   const info = urlUtil.parse(url!);
   const ops: RequestOptions = {
     hostname: info.hostname,
@@ -18,34 +18,35 @@ const request = (req: IncomingMessage, res: ServerResponse) => {
     path: info.path,
   };
 
-  console.log('[test]:', 'ops', ops);
   const proxy: ClientRequest = http
     .request(ops, (resp: http.IncomingMessage) => {
-      console.log('[test]:', resp.statusCode);
-      res.write('Proxy: OwlStudio')
+      console.log('[status]:', resp.statusCode);
+      res.write('Proxy: OwlStudio');
       resp.pipe(res);
     })
-    .on('error', e => {
+    .on('error', () => {
       res.end();
     });
 
   req.pipe(proxy);
 };
 
-export const connect = (req: IncomingMessage, res: ServerResponse): void => {
-  console.log('[test]:', 'connect', req.headers);
-  const u: UrlWithStringQuery = urlUtil.parse(`http://${req.url!}`);
-  console.log('[test]:', 'u', u);
+export const connect = (req: IncomingMessage, res: any, head: any): void => {
+  // console.log('[test]:', 'connect', req.headers);
+  const { remoteAddress, remotePort } = res;
+  console.log(`[${remoteAddress}:${remotePort}] ==>`, req.method, req.url);
+  const { port, hostname } = urlUtil.parse(`//${req.url}`, false, true); // extract destination host and port from CONNECT request
+
   const proxy = net
-    .connect(+u.port!, u.hostname, () => {
+    .connect(+port!, hostname, () => {
       res.write(['HTTP/1.1 200 Connection Established', 'Proxy-HTTPS: OwlStudio'].join('\r\n'));
       res.write('\r\n\r\n');
       proxy.pipe(res);
     })
-    .on('error', e => {
+    .on('error', () => {
       res.end();
     });
-  res.on('error', err => {});
+  res.on('error', () => {});
   res.pipe(proxy);
 };
 
