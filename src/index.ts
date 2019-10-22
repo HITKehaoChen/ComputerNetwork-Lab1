@@ -38,7 +38,7 @@ export const connect = (req: IncomingMessage, res: ServerResponse): void => {
   console.log('[test]:', 'u', u);
   const proxy = net
     .connect(+u.port!, u.hostname, () => {
-      res.write(['HTTP/1.1 200 Connection Established', 'Proxy-: OwlStudio'].join('\r\n'));
+      res.write(['HTTP/1.1 200 Connection Established', 'Proxy-HTTPS: OwlStudio'].join('\r\n'));
       res.write('\r\n\r\n');
       proxy.pipe(res);
     })
@@ -53,4 +53,3 @@ server.on('request', request).on('connect', connect);
 server.listen(listenPort, () => {
   console.log('[test]:', `Server listened on port:${listenPort}`);
 });
-console.log('[test]', 'reload test');
